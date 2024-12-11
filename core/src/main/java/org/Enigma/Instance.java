@@ -10,6 +10,12 @@ public abstract class Instance {
     private ArrayList<String> tags = new ArrayList<>();
     private Map<String, Object> attributes = new HashMap<>();
 
+    protected boolean IsService = false;
+
+    public Instance() {
+        Universe.instances.add(this);
+    }
+
     public Instance[] GetChildren() {
         ArrayList<Instance> children = new ArrayList<>();
         for (Instance inst : Universe.instances) {
@@ -51,10 +57,14 @@ public abstract class Instance {
             descendant.Parent = null;
         }
         this.Parent = null;
+        this.Destroyed.Fire(null);
     }
 
     public void AddTag(String tag) {
         tags.add(tag);
+        Map<String, Object> values = new HashMap<>();
+        values.put("tag", tag);
+        this.TagAdded.Fire(values);
     }
 
     public boolean HasTag(String tag) {
@@ -63,6 +73,8 @@ public abstract class Instance {
 
     public void RemoveTag(String tag) {
         tags.remove(tag);
+        Map<String, Object> values = new HashMap<>();
+        this.TagRemoved.Fire(values);
     }
 
     public String[] GetTags() {
@@ -71,6 +83,10 @@ public abstract class Instance {
 
     public void SetAttribute(String name, Object value) {
         attributes.put(name, value);
+        Map<String, Object> values = new HashMap<>();
+        values.put("name", name);
+        values.put("value", value);
+        this.AttributeChanged.Fire(values);
     }
 
     public Object GetAttribute(String name) {
@@ -89,8 +105,18 @@ public abstract class Instance {
         return new HashMap<>(attributes);
     }
 
-    public abstract void Tick();
-    public abstract void PreTick();
-    public abstract void Render();
-    public abstract void PreRender();
+    public abstract void Tick(double DeltaTime);
+    public abstract void PreTick(double DeltaTime);
+    public abstract void Render(double DeltaTime);
+    public abstract void PreRender(double DeltaTime);
+
+    public final ScriptSignal ChildAdded = new ScriptSignal();
+    public final ScriptSignal ChildRemoved = new ScriptSignal();
+    public final ScriptSignal ParentChanged = new ScriptSignal();
+    public final ScriptSignal AncestorAdded = new ScriptSignal();
+    public final ScriptSignal AncestorRemoved = new ScriptSignal();
+    public final ScriptSignal AttributeChanged = new ScriptSignal();
+    public final ScriptSignal TagAdded = new ScriptSignal();
+    public final ScriptSignal TagRemoved = new ScriptSignal();
+    public final ScriptSignal Destroyed = new ScriptSignal();
 }
